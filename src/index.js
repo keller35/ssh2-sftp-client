@@ -61,6 +61,16 @@ class SftpClient {
     this.client.removeListener(eventType, callback);
   }
 
+  forwardOut(...params) {
+    this.debugMsg(`forwardOut`);
+    return new Promise((resolve, reject) => {
+      this.client.forwardOut(...params, (err, stream) => {
+        if (err) return reject(err);
+        resolve(stream);
+      });
+    });
+  }
+  
   /**
    * @async
    *
