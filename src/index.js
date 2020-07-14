@@ -663,6 +663,21 @@ class SftpClient {
     }
   }
 
+  // auto create parent path if not exist
+  async autoPut(localSrc, remotePath, options) {
+    // check if parent exist
+    let pathInfo = await utils.checkRemotePath(
+      this,
+      remotePath,
+      targetType.writeFile
+    );
+    if (pathInfo.code === errorCode.badPath) {
+      const parent = /.*\//.exec(remotePath);
+      await this.mkdir(parent[0], true);
+    }
+    return await this.put(localSrc, remotePath, options);
+  }
+
   /**
    * Create file a file on the remote server. The 'src' argument
    * can be a buffer, string or read stream. If 'src' is a string, it
