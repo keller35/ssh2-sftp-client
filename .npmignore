@@ -1,7 +1,5 @@
 *.tgz
 .DS_Store
-README.org
-node_modules
 tmp
 test
 example
@@ -12,6 +10,7 @@ env-turing2
 env-vbox
 env-vbox2
 env-win10
+env-win
 .eslintrc.js
 .mocharc.js
 .indium.json
@@ -21,4 +20,9 @@ tools
 .vscode
 .log
 *~
-
+mate-vbox
+validation
+debug.log
+coverage
+.nyc_output
+.nycrc.json

@@ -4,205 +4,196 @@ const chai = require('chai');
 const expect = chai.expect;
 const chaiSubset = require('chai-subset');
 const chaiAsPromised = require('chai-as-promised');
-const {
-  config,
-  getConnection,
-  closeConnection,
-  makeRemotePath,
-  makeLocalPath
-} = require('./hooks/global-hooks');
 const utils = require('../src/utils');
-const {targetType} = require('../src/constants');
 
 chai.use(chaiSubset);
 chai.use(chaiAsPromised);
 
-describe('formatError tests', function () {
-  it('formatError returns Error object', function () {
-    return expect(utils.formatError('test msg', 'test', 'error code')).to.be.an(
+describe('fmtError() tests', function () {
+  it('fmtError returns Error object', function () {
+    return expect(utils.fmtError('test msg', 'test', 'error code')).to.be.an(
       'error'
     );
   });
 
-  it('formatError has expected values', function () {
+  it('fmtError has expected values', function () {
     return expect(
-      utils.formatError('test msg', 'name', 'error code')
+      utils.fmtError('test msg', 'name', 'error code')
     ).to.containSubset({
       message: 'name: test msg',
       code: 'error code'
     });
   });
 
-  it('formatError has retry count', function () {
+  it('fmtError has retry count', function () {
     return expect(
-      utils.formatError('test msg', 'name', 'error code', 4)
+      utils.fmtError('test msg', 'name', 'error code', 4)
     ).to.containSubset({
       message: 'name: test msg after 4 attempts',
       code: 'error code'
     });
   });
 
-  it('formatError has default error code', function () {
-    return expect(utils.formatError('test msg', 'nme').code).to.equal(
+  it('fmtError has default error code', function () {
+    return expect(utils.fmtError('test msg', 'nme').code).to.equal(
       'ERR_GENERIC_CLIENT'
     );
   });
 
-  it('formatError has default name', function () {
-    return expect(utils.formatError('test msg').message).to.equal(
+  it('fmtError has default name', function () {
+    return expect(utils.fmtError('test msg').message).to.equal(
       'sftp: test msg'
     );
   });
-});
 
-describe('Test checkRemotePath', function () {
-  let sftp;
-
-  // before(function(done) {
-  //   setTimeout(function() {
-  //     done();
-  //   }, config.delay);
-  // });
-
-  before('Exist test setup hook', async function () {
-    sftp = await getConnection();
-    let remoteDir = makeRemotePath(config.sftpUrl, 'check-dir');
-    await sftp.mkdir(remoteDir, true);
-    let remoteFile = makeRemotePath(config.sftpUrl, 'check-file.txt');
-    let localFile = makeLocalPath(config.localUrl, 'test-file1.txt');
-    await sftp.fastPut(localFile, remoteFile);
-    return true;
-  });
-
-  after('Exist test cleanup hook', async function () {
-    let remoteDir = makeRemotePath(config.sftpUrl, 'check-dir');
-    let remoteFile = makeRemotePath(config.sftpUrl, 'check-file.txt');
-    await sftp.rmdir(remoteDir, true);
-    await sftp.delete(remoteFile);
-    await closeConnection();
-    return true;
-  });
-
-  it('Returns valid for remote dir', function () {
-    return expect(
-      utils.checkRemotePath(sftp, config.sftpUrl, targetType.readDir)
-    ).to.become({path: config.sftpUrl, type: 'd', valid: true});
-  });
-
-  it('Returns valid for remote file', function () {
-    let remoteFile = makeRemotePath(config.sftpUrl, 'check-file.txt');
-    return expect(
-      utils.checkRemotePath(sftp, remoteFile, targetType.readFile)
-    ).to.become({
-      path: remoteFile,
-      type: '-',
-      valid: true
+  it('fmtError handles null error', function () {
+    return expect(utils.fmtError(undefined)).to.containSubset({
+      message: 'sftp: Undefined error - probably a bug!',
+      code: 'ERR_GENERIC_CLIENT'
     });
   });
 
-  it('Invalid if wrong target type (dir)', function () {
-    let remotePath = makeRemotePath(config.sftpUrl, 'check-file.txt');
+  it('fmtError handles custom error 1', function () {
     return expect(
-      utils.checkRemotePath(sftp, remotePath, targetType.readDir)
-    ).to.become({
-      path: remotePath,
-      type: '-',
-      valid: false,
-      msg: `Bad path: ${remotePath} must be a directory`,
-      code: 'ERR_BAD_PATH'
+      utils.fmtError(utils.fmtError('Original Error', 'someMethod'), 'top')
+    ).to.containSubset({
+      message: 'top->someMethod: Original Error',
+      code: 'ERR_GENERIC_CLIENT',
+      custom: true
     });
   });
 
-  it('invalid if wrong target type (file)', function () {
-    return expect(
-      utils.checkRemotePath(sftp, config.sftpUrl, targetType.readFile)
-    ).to.become({
-      path: config.sftpUrl,
-      type: 'd',
-      valid: false,
-      msg: `Bad path: ${config.sftpUrl} must be a file`,
-      code: 'ERR_BAD_PATH'
+  it('fmtError custom errors', function () {
+    let e1 = utils.fmtError('Original Error', 'somefunc');
+    return expect(utils.fmtError(e1, 'top')).to.containSubset({
+      message: 'top->somefunc: Original Error',
+      code: 'ERR_GENERIC_CLIENT',
+      custom: true
     });
   });
 
-  it('valid but undefined type for non-existent file', function () {
-    let remotePath = makeRemotePath(config.sftpUrl, 'no-such-file.gz');
-    return expect(
-      utils.checkRemotePath(sftp, remotePath, targetType.writeFile)
-    ).to.become({
-      path: remotePath,
-      type: false,
-      valid: true
+  it('fmtError error code ENOTFOUND', function () {
+    let e = new Error('Not Found');
+    e.code = 'ENOTFOUND';
+    e.level = 'Client';
+    e.hostname = 'bogus.com';
+    return expect(utils.fmtError(e, 'func')).to.containSubset({
+      message: 'func: Client error. Address lookup failed for host bogus.com',
+      code: 'ENOTFOUND'
     });
   });
 
-  it('valid but undefined type for non-existent dir', function () {
-    let remotePath = makeRemotePath(config.sftpUrl, 'no-such-dir');
-    return expect(
-      utils.checkRemotePath(sftp, remotePath, targetType.writeDir)
-    ).to.become({
-      path: remotePath,
-      type: false,
-      valid: true
+  it('fmtError error code ECONNREFUSED', function () {
+    let e = new Error('Connection refused');
+    e.code = 'ECONNREFUSED';
+    e.level = 'Server';
+    e.address = '1.1.1.1';
+    return expect(utils.fmtError(e, 'func')).to.containSubset({
+      message: 'func: Server error. Remote host at 1.1.1.1 refused connection',
+      code: 'ECONNREFUSED'
+    });
+  });
+
+  it('fmtError error code ECONNRESET', function () {
+    let e = new Error('Connection reset');
+    e.code = 'ECONNRESET';
+    return expect(utils.fmtError(e, 'func')).to.containSubset({
+      message: 'func: Remote host has reset the connection: Connection reset',
+      code: 'ECONNRESET'
     });
   });
 });
 
-describe('Test checkLocalPath', function () {
-  it('Returns valid for local dir', function () {
-    return expect(
-      utils.checkLocalPath(config.localUrl, targetType.readDir)
-    ).to.eventually.containSubset({type: 'd', valid: true});
+describe('errorListener', function () {
+  let client = {
+    debugMsg: (msg) => {
+      //console.log(msg);
+      null;
+    },
+    errorHandled: false,
+    endCalled: false
+  };
+
+  beforeEach(function () {
+    client.errorHandled = false;
+    client.endCalled = false;
   });
 
-  it('Return valid for local file', function () {
-    let localPath = makeLocalPath(config.localUrl, 'test-file1.txt');
-    return expect(
-      utils.checkLocalPath(localPath, targetType.readFile)
-    ).to.eventually.containSubset({
-      type: '-',
-      valid: true
+  it('error is rejected', function () {
+    let p = new Promise((resolve, reject) => {
+      let handler = utils.errorListener(client, 'Test1', reject);
+      let e = new Error('A plain error');
+      e.code = 'GENERIC ERROR';
+      handler(e);
     });
+    return expect(p).to.be.rejectedWith(/Test1: A plain error/);
   });
 
-  it('invalid if wrong target type (file)', function () {
-    return expect(
-      utils.checkLocalPath(config.localUrl, targetType.readFile)
-    ).to.eventually.containSubset({
-      type: 'd',
-      valid: false,
-      code: 'ERR_BAD_PATH'
-    });
+  it('error is thrown', function () {
+    let handler = utils.errorListener(client, 'Test2');
+    let e = utils.fmtError('A thrown error');
+    e.code = 'GENERIC ERROR';
+    let fn = () => {
+      handler(e);
+    };
+    return expect(fn).to.throw(/Test2->sftp: A thrown error/);
+  });
+});
+
+describe('endListener', function () {
+  let client = {
+    debugMsg: (msg) => {
+      //console.log(msg);
+      null;
+    },
+    errorHandled: false,
+    endCalled: false
+  };
+
+  beforeEach(function () {
+    client.errorHandled = false;
+    client.endCalled = false;
   });
 
-  it('Invalid if wrong target type (dir)', function () {
-    let localPath = makeLocalPath(config.localUrl, 'test-file1.txt');
-    return expect(
-      utils.checkLocalPath(localPath, targetType.readDir)
-    ).to.eventually.containSubset({
-      type: '-',
-      valid: false,
-      code: 'ERR_BAD_PATH'
+  it('end rejected', function () {
+    let p = new Promise((resolve, reject) => {
+      let handler = utils.endListener(client, 'Test3', reject);
+      handler();
     });
+    return expect(p).to.be.rejectedWith(/Test3: Unexpected end event raised/);
   });
 
-  it('valid but undefined type for non-existing file', function () {
-    let localPath = makeLocalPath(config.localUrl, 'no-such-file.gz');
-    return expect(
-      utils.checkLocalPath(localPath, targetType.writeFile)
-    ).to.eventually.containSubset({
-      type: false,
-      valid: true
-    });
+  it('end raises error', function () {
+    let handler = utils.endListener(client, 'Test4');
+    return expect(handler).to.throw(/Test4: Unexpected end event raised/);
+  });
+});
+
+describe('closeListener', function () {
+  let client = {
+    debugMsg: (msg) => {
+      //console.log(msg);
+      null;
+    },
+    errorHandled: false,
+    endCalled: false
+  };
+
+  beforeEach(function () {
+    client.errorHandled = false;
+    client.endCalled = false;
   });
 
-  it('valid but undefined type for non-existing dir', function () {
-    let localPath = makeLocalPath(config.localUrl, 'no-such-dir');
-    return expect(
-      utils.checkLocalPath(localPath, targetType.writeDir)
-    ).to.eventually.containSubset({
-      type: false,
-      valid: true
+  it('close rejected', function () {
+    let p = new Promise((resolve, reject) => {
+      let handler = utils.closeListener(client, 'Test5', reject);
+      handler();
     });
+    return expect(p).to.be.rejectedWith(/Test5: Unexpected close event raised/);
+  });
+
+  it('close throws error', function () {
+    let handler = utils.closeListener(client, 'Test6');
+    return expect(handler).to.throw(/Test6: Unexpected close event raised/);
   });
 });

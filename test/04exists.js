@@ -4,23 +4,21 @@ const chai = require('chai');
 const expect = chai.expect;
 const chaiSubset = require('chai-subset');
 const chaiAsPromised = require('chai-as-promised');
-const {config, getConnection, makeRemotePath} = require('./hooks/global-hooks');
-const {existSetup, existCleanup} = require('./hooks/exist-hooks');
+const {config, getConnection} = require('./hooks/global-hooks');
 
 chai.use(chaiSubset);
 chai.use(chaiAsPromised);
 
-describe('exists() method tests', function () {
+describe('exists() method tests', async () => {
   let sftp;
 
   before('exists() test setup hook', async function () {
     sftp = await getConnection();
-    await existSetup(sftp, config.sftpUrl, config.localUrl);
     return true;
   });
 
-  after('exist() test cleanup hook', async function () {
-    await existCleanup(sftp, config.sftpUrl);
+  after('exists() test cleanup hook', async function () {
+    await sftp.end();
     return true;
   });
 
@@ -29,23 +27,7 @@ describe('exists() method tests', function () {
   });
 
   it('exists returns truthy for existing directory', function () {
-    return expect(
-      sftp.exists(makeRemotePath(config.sftpUrl, 'exist-test-dir'))
-    ).to.eventually.equal('d');
-  });
-
-  it('exist returns truthy for existing file', function () {
-    return expect(
-      sftp.exists(makeRemotePath(config.sftpUrl, 'exist-file.txt'))
-    ).to.eventually.equal('-');
-  });
-
-  it('exist returns true for file in sub-dir', function () {
-    return expect(
-      sftp.exists(
-        makeRemotePath(config.sftpUrl, 'exist-test-dir', 'exist-gzip.txt.gz')
-      )
-    ).to.eventually.equal('-');
+    return expect(sftp.exists(`${config.sftpUrl}`)).to.eventually.equal('d');
   });
 
   it('exist returns true for "." dir', function () {
@@ -53,14 +35,12 @@ describe('exists() method tests', function () {
   });
 
   it('exists returns true for relative path on existing dir', async function () {
-    return expect(
-      sftp.exists('./testServer/exist-test-dir')
-    ).to.eventually.equal('d');
+    return expect(sftp.exists('./testServer')).to.eventually.equal('d');
   });
 
   it('Exists return false value for non existent dir', function () {
     return expect(
-      sftp.exists(makeRemotePath(config.sftpUrl, 'no-such-dir/subdir'))
+      sftp.exists(`${config.sftpUrl}/no-such-dir/subdir`)
     ).to.eventually.equal(false);
   });
 

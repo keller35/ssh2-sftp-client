@@ -15,3 +15,12 @@ env-turing2
 env-win10
 .log
 .vscode
+mate-vbox
+env-vbox2
+env-win
+package.json-github
+package.json-prod
+validation/test-file2.txt
+coverage
+.nyc_output
+debug.log

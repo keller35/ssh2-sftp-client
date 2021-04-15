@@ -13,7 +13,8 @@
     "promises"
   ],
   "scripts": {
-    "test": "mocha"
+    "test": "mocha",
+    "coverage": "nyc npm run test"
   },
   "author": "Tim Cross",
   "email": "theophilusx@gmail.com",
@@ -26,8 +27,9 @@
   "license": "Apache-2.0",
   "dependencies": {
     "concat-stream": "^2.0.0",
-    "retry": "^0.12.0",
-    "ssh2": "^0.8.9"
+    "promise-retry": "^2.0.1",
+    "ssh2": "^0.8.9",
+    "winston": "^3.3.3"
   },
   "devDependencies": {
     "chai": "^4.2.0",
@@ -35,8 +37,9 @@
     "chai-subset": "^1.6.0",
     "checksum": "^0.1.1",
     "dotenv": "^8.2.0",
-    "moment": "^2.27.0",
-    "mocha": "^8.0.1",
+    "mocha": "^8.2.1",
+    "moment": "^2.29.1",
+    "nyc": "^15.1.0",
     "through2": "^4.0.2"
   }
 }

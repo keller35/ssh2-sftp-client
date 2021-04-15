@@ -6,6 +6,35 @@ require('dotenv').config({path: dotenvPath});
 
 const Client = require('../../src/index.js');
 const {join} = require('path');
+const winston = require('winston');
+
+const logger = winston.createLogger({
+  level: 'debug',
+  transports: [
+    new winston.transports.File({filename: 'debug.log', level: 'debug'})
+  ]
+});
+
+function hasListener(emitter, eventName, listenerName) {
+  let listeners = emitter.listeners(eventName);
+  let matches = listeners.filter((l) => l.name == listenerName);
+  return matches.length === 0 ? false : true;
+}
+
+function dumpListeners(emitter) {
+  let eventNames = emitter.eventNames();
+  if (eventNames.length) {
+    console.log('Listener Data');
+    eventNames.map((n) => {
+      let listeners = emitter.listeners(n);
+      console.log(`${n}: ${emitter.listenerCount(n)}`);
+      console.dir(listeners);
+      listeners.map((l) => {
+        console.log(`listener name = ${l.name}`);
+      });
+    });
+  }
+}
 
 // use your test ssh server config
 const config = {
@@ -21,7 +50,13 @@ const config = {
 
 if (process.env.DEBUG === 'true') {
   config.debug = (msg) => {
-    console.error(msg);
+    logger.debug(msg);
+  };
+} else if (process.env.DEBUG === 'client') {
+  config.debug = (msg) => {
+    if (msg.startsWith('CLIENT')) {
+      logger.debug(msg);
+    }
   };
 }
 
@@ -39,10 +74,7 @@ const makeRemotePath = (...args) => {
 };
 
 const splitRemotePath = (p) => {
-  if (process.env.TEST_SERVER === 'unix') {
-    return p.split('/');
-  }
-  return p.split('\\');
+  return p.split('/');
 };
 
 const lastRemoteDir = (p) => {
@@ -59,11 +91,25 @@ const getConnection = async () => {
       await con.connect(config);
       let root = await con.realPath('.');
       config.remoteRoot = root;
+    } else {
+      await con.connect(config);
     }
     return con;
   } catch (err) {
     console.error(`Connect failure ${err.message}`);
-    console.dir(config);
+    let eventNames = con.client.eventNames();
+    if (eventNames.length) {
+      console.log('Listener Data');
+      eventNames.map((n) => {
+        let listeners = con.client.listeners(n);
+        console.log(`${n}: ${con.client.listenerCount(n)}`);
+        console.dir(listeners);
+        listeners.map((l) => {
+          console.log(`listener name = ${l.name}`);
+        });
+      });
+    }
+
     throw err;
   }
 };
@@ -82,6 +128,8 @@ const closeConnection = async () => {
 };
 
 module.exports = {
+  hasListener,
+  dumpListeners,
   config,
   makeLocalPath,
   makeRemotePath,

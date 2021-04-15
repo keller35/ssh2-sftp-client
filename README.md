@@ -1,19 +1,9 @@
-- [SSH2 SFTP Client](#sec-1)
+- [Overview](#sec-1)
 - [Installation](#sec-2)
 - [Basic Usage](#sec-3)
-- [Version 5.x](#sec-4)
-  - [Breaking Changes in Version 5.x](#sec-4-1)
-    - [Error Event Handling](#sec-4-1-1)
-    - [Technical Details](#sec-4-1-2)
-  - [New Methods](#sec-4-2)
-  - [Version 5.0.1](#sec-4-3)
-  - [Version 5.0.2](#sec-4-4)
-  - [Version 5.1.0](#sec-4-5)
-  - [Version 5.1.1](#sec-4-6)
-  - [Version 5.1.2](#sec-4-7)
-  - [Version 5.1.3](#sec-4-8)
-  - [Version 5.2.0](#sec-4-9)
-  - [Version 5.2.1](#sec-4-10)
+- [Version 6.x Changes](#sec-4)
+  - [Version 6.0.1](#sec-4-1)
+  - [Version 6.0.0 Changes](#sec-4-2)
 - [Documentation](#sec-5)
   - [Specifying Paths](#sec-5-1)
   - [Methods](#sec-5-2)
@@ -29,82 +19,63 @@
     - [append(input, remotePath, options) ==> string](#sec-5-2-10)
     - [mkdir(path, recursive) ==> string](#sec-5-2-11)
     - [rmdir(path, recursive) ==> string](#sec-5-2-12)
-    - [delete(path) ==> string](#sec-5-2-13)
+    - [delete(path, noErrorOK) ==> string](#sec-5-2-13)
     - [rename(fromPath, toPath) ==> string](#sec-5-2-14)
     - [posixRename(fromPath, toPath) ==> string](#sec-5-2-15)
     - [chmod(path, mode) ==> string](#sec-5-2-16)
     - [realPath(path) ===> string](#sec-5-2-17)
     - [cwd() ==> string](#sec-5-2-18)
-    - [uploadDir(srcDir, dstDir) ==> string](#sec-5-2-19)
-    - [downloadDir(srcDir, dstDir) ==> string](#sec-5-2-20)
+    - [uploadDir(srcDir, dstDir, filter) ==> string](#sec-5-2-19)
+    - [downloadDir(srcDir, dstDir, filter) ==> string](#sec-5-2-20)
     - [end() ==> boolean](#sec-5-2-21)
     - [Add and Remove Listeners](#sec-5-2-22)
-- [FAQ](#sec-6)
-  - [Remote server drops connections with only an end event](#sec-6-1)
-  - [How can you pass writable stream as dst for get method?](#sec-6-2)
-  - [How can I upload files without having to specify a password?](#sec-6-3)
-  - [How can I connect through a Socks Proxy](#sec-6-4)
-  - [Timeout while waiting for handshake or handshake errors](#sec-6-5)
-- [Examples](#sec-7)
-- [Change Log](#sec-8)
-  - [v5.2.1 (Prod Version)](#sec-8-1)
-  - [v5.2.0](#sec-8-2)
-  - [v5.1.3](#sec-8-3)
-  - [v5.1.2](#sec-8-4)
-  - [v5.1.1](#sec-8-5)
-  - [v5.1.0](#sec-8-6)
-  - [v5.0.2](#sec-8-7)
-  - [v5.0.1](#sec-8-8)
-  - [v5.0.0](#sec-8-9)
-  - [v4.3.1](#sec-8-10)
-  - [v4.3.0](#sec-8-11)
-  - [v4.2.4](#sec-8-12)
-  - [v4.2.3](#sec-8-13)
-  - [v4.2.2](#sec-8-14)
-  - [v4.2.1](#sec-8-15)
-  - [v4.2.0](#sec-8-16)
-  - [v4.1.0](#sec-8-17)
-  - [v4.0.4](#sec-8-18)
-  - [v4.0.3](#sec-8-19)
-  - [v4.0.2](#sec-8-20)
-  - [v4.0.0](#sec-8-21)
-  - [Older Versions](#sec-8-22)
-    - [v2.5.2](#sec-8-22-1)
-    - [v2.5.1](#sec-8-22-2)
-    - [v2.5.0](#sec-8-22-3)
-    - [v2.4.3](#sec-8-22-4)
-    - [v2.4.2](#sec-8-22-5)
-    - [v2.4.1](#sec-8-22-6)
-    - [v2.4.0](#sec-8-22-7)
-    - [v2.3.0](#sec-8-22-8)
-    - [v3.0.0 &#x2013; deprecate this version](#sec-8-22-9)
-    - [v2.1.1](#sec-8-22-10)
-    - [v2.0.1](#sec-8-22-11)
-    - [v1.1.0](#sec-8-22-12)
-    - [v1.0.5:](#sec-8-22-13)
+- [Platform Quirks & Warnings](#sec-6)
+  - [Server Capabilities](#sec-6-1)
+  - [Promises & Events](#sec-6-2)
+  - [Windows Based Servers](#sec-6-3)
+  - [Don't Re-use SftpClient Objects](#sec-6-4)
+- [FAQ](#sec-7)
+  - [Remote server drops connections with only an end event](#sec-7-1)
+  - [How can I pass writable stream as dst for get method?](#sec-7-2)
+  - [How can I upload files without having to specify a password?](#sec-7-3)
+  - [How can I connect through a Socks Proxy](#sec-7-4)
+  - [Timeout while waiting for handshake or handshake errors](#sec-7-5)
+  - [How can I limit upload/download speed](#sec-7-6)
+- [Examples](#sec-8)
 - [Troubleshooting](#sec-9)
   - [Common Errors](#sec-9-1)
     - [Not returning the promise in a `then()` block](#sec-9-1-1)
     - [Mixing Promise Chains and Async/Await](#sec-9-1-2)
     - [Try/catch and Error Handlers](#sec-9-1-3)
+    - [Server Differences](#sec-9-1-4)
+    - [Avoid Concurrent Operations](#sec-9-1-5)
   - [Debugging Support](#sec-9-2)
 - [Logging Issues](#sec-10)
 - [Pull Requests](#sec-11)
 - [Contributors](#sec-12)
 
-# SSH2 SFTP Client<a id="sec-1"></a>
+
+# Overview<a id="sec-1"></a>
 
 an SFTP client for node.js, a wrapper around [SSH2](https://github.com/mscdex/ssh2) which provides a high level convenience abstraction as well as a Promise based API.
 
 Documentation on the methods and available options in the underlying modules can be found on the [SSH2](https://github.com/mscdex/ssh2) and [SSH2-STREAMS](https://github.com/mscdex/ssh2-streams/blob/master/SFTPStream.md) project pages.
 
-Current stable release is **v5.2.1**.
+Current stable release is **v5.3.2**.
 
 Code has been tested against Node versions 12.18.2 and 13.14.0
 
 Node versions < 10.x are not supported.
 
-<span class="underline">WARNING</span> There is currently an issue with both the fastPut() and fastGet() methods when using Node versions greater than 14.0.0. This is a bug in the underlying ssh2-streams library and needs to be fixed upstream. The issue appears to be related to the concurrency operations of these two functions. A workaround is to set concurrency to 1 using the options object. Alternatively, use get() or put(), which do not use concurrency and which will provide the same performance as fastGet() or fastPut() when they are set to use a concurrency of 1. A bug report has been logged against the ssh2-streams library as [issue 156](https://github.com/mscdex/ssh2-streams/issues/156).
+<span class="underline">WARNING</span> There is currently a regression error with versions of node later than version 14.0. It appears that when using streams with chunk sizes which exceed the high water mark for the stream, a drain event is no longer emitted. As a result, streams with sufficient data will hang indefinitely. This appears to affect fastput, fastget, put and possibly get operations. Until this issue is resolved and a new version of ssh2/ssh2-streams is released, using node v14 is not recommended.
+
+A bug report hass been logged against the ssh2-streams library as [issue 156](https://github.com/mscdex/ssh2-streams/issues/156).
+
+<span class="underline">UPDATE</span>: The author of the upstream ssh2 and ssh2-streams module has decided on a re-write of the ssh2 module to address the above issues as well as some other design limitations and to allow the module to better fit in with newer versions of node. As part of that process, the functionality of ssh2-streams is being incorporated into the main ssh2 module and the ssh2-streams module is being deprecated. This will require a significant update to this module and may result in some API changes, depending on what changes in the re-write of ssh2.
+
+To support these changes, a new branch called *version-6* has been created. This branch will use the newest version of ssh2 and for now is very much experimental and subject to change.
+
+<span class="underline">UPDATE</span>: Apparently the change in core node which cause the issue with ssh2 has been rolled back in node version 15.3.0. Testing seems to indicate the above issue does not exist in that version of node.
 
 # Installation<a id="sec-2"></a>
 
@@ -132,95 +103,23 @@ sftp.connect({
 });
 ```
 
-# Version 5.x<a id="sec-4"></a>
+# Version 6.x Changes<a id="sec-4"></a>
 
-## Breaking Changes in Version 5.x<a id="sec-4-1"></a>
+## Version 6.0.1<a id="sec-4-1"></a>
 
--   The auxList() method has been removed. This method was flagged as deprecated in version 4.x. The functionality provided by `auxList()` is available in `list()`, making `auxList()` unnecessary.
--   The realPath() method now returns `''` if the path does not exist rather than throwing an exception.
--   Improved error handling. The `ssh2` and `ssh2-streams` libraries use events to signal errors. Providing a clean Promise based API and managing these events can be challenging as an error event can fire at any time (including in-between the resolution of one promise and the commencement of another). As you cannot use `try/catch` blocks to reliably manage error events (for a similar reason - see Node's event documentation for details), a slightly more complex solution was required. See the section below on Error Event Handling for more details. In basic terms, a default handler is now used that will log the error and clear the SFTP connection if no Promise error handler has handled the error. This prevents the uncaughtException error and provides a reasonably clean way to deal with unexpected errors that fire in-between Promise execution activities.
--   Ignore Errors during `end()` processing. At least one SFTP server (Azure SFTP) seems to generate an error in response to the `end()` call. As `end()` has been called, we don't really care if an error occurs provided the connection is closed. Therefore, a new default error listener for the `end()` method has been added that will simply ignore any errors which occur during a call to end the connection.
+-   Fix issue with connect retry not releasing 'ready' listener.
+-   Add finally clauses to all promises to ensure release of temporary listeners.
+-   Add nyc module to improve test coverage
+-   Added additional utils tests to improve test coverage
+-   Removed some unnecessary util functions to reduce code size
 
-### Error Event Handling<a id="sec-4-1-1"></a>
+## Version 6.0.0 Changes<a id="sec-4-2"></a>
 
-Providing a clean Promise API for the SSH2 to manage basic SFTP functionality presents a couple of challenges for managing errors. The `SSH2` module uses events to communicate various state changes and error conditions. These events can fire at any time.
-
-On the client side, we wrap basic SFTP actions in Javascript Promises, allowing clients to use either the standard Promise API or async/await to model SFTP interactions. Creating an SFTP connection returns a promise, which resolves if a connection is successfully established and is rejected otherwise. Downloading a file using `get()` or `fastGet()` generates a new Promise which is either resolved, indicating file has been successfully downloaded or rejected, indicating the download failed. All pretty straight-forward.
-
-When the Promise is created, an error event handler is added to the SFTP object to catch any errors that fire during the execution of the promise. If an error event fires, the Promise is rejected and the error returned to the client as part of the rejection. After the Promise has resolved or rejected, the error listener is removed (the error listener is specific to each promise because it needs to call the reject method associated with that promise). As a promise can only be resolved or rejected once, after the Promise has completed, the error listener is of no further use.
-
-This all works fine when an error event fires during the execution of a Promise. However, what about outside promise execution? Consider the following flow;
-
-1.  You have an active SFTP connection which you use to download a file
-2.  When you make the download request, a new Promise is created which will resolve when the file is downloaded or be rejected if the download fails for some reason. The promise resolves successfully.
-3.  You start processing the data downloaded. At this point, you still have an open connection to the SFTP server, but you are not actively interacting with it. There is no active Promise in play.
-4.  The remote SFTP server resets the connection for some reason, generating a ECONNRESET error that is emitted as an error event.
-
-What happens at this point? There is no active promise executing, so no Promise specific error handler in play. Your script is off processing the data from the previously downloaded file, so there is no currently executing try/catch block around the SFTP client object. Basically, there is nothing listening of any errors at this point. What will happen?
-
-Well, basically, the error event will bubble up to the top level of the node process context and cause an uncaughtException error, display the error and dump a stack trace and cause the node process to exit. In basic terms, your process will crash. Not a great outcome.
-
-There are a number of things we can do to improve the situation. However, nearly all of them have some drawbacks. We could -
-
--   Add our own error handler. The `client.on()` method would allow you to add your own error handler. This would provide a way to manage error events, but you want to make sure you only handle error events not handled already by the Promise error handlers. Worse yet, you cannot know before hand the processing context of your script at the point the error event fires. This means your error handling is likely to be complex and difficult to manage. Worse yet, these types of errors are quite rare in most situations and your now being required to add significant additional complexity to deal with a rare edge case. However, sometimes, you just need to deal with this sort of complexity and the `client.on()` method does give you that option.
--   Another alternative is to just add an uncaughtException handler to your Node process object. This would also prevent node from dumping the error and exiting abruptly. However, now you need to think about ALL the possible uncaughtExceptions which might happen, not just those associated with the SFTP client. Again, things are getting complicated for something which only occurs occasionally. .
-
-What we really want is a solution which will be simple for the majority of clients, but provide additional power when needed. What we have done is add a default error handler which will only take action if no Promise error handler has fired. All the default error handler does is log the error to console.error() and set the SFTP connection to undefined so that any further attempts to use the connection will throw an error inside the Promise which attempts to use it.
-
-The advantage of this approach is that it stops the abrupt exiting of the node script due to an uncaught exception error and provides a reasonable outcome for most use cases. For example, in the scenario outlined above, if an error event fires while your script is processing the data already downloaded, it will not impact on your script immediately. An error will be logged to console.error(), but your script will continue to run. Once you have completed processing your data, if you attempt another SFTP call, it will fail with an error about no available SFTP connections. As this will occur within the context of interacting with the SFTP server, your script can take appropriate action to resolve the issue (such as re-connecting to the server). On the other hand, if after processing the file your done and just want to end, then you can just ignore the error, perform any necessary cleanup work and exit successfully.
-
-### Technical Details<a id="sec-4-1-2"></a>
-
-The event handlers added by each Promise are added using the `prependListener()` function. This ensures the handler is fired before any other error handlers which may be defined. As part of the processing, these error handler set a flag property `this.errorHandled` to true, indicating the error has been handled.
-
-In addition to the Promise error handlers, there is a default error handler which will fire after any Promise error handler. The default error handler looks to see if the `this.errorHandler` flag is true. If it is, it knows the error has been handled and it just resets it to false, taking no other action (so taht we are ready for the next error). If the flag is false, the default handler knows it must handle the error. In this case, the handler will log the error to `console.error()`, will set the SFTP connection to undefined to prevent any further attempts to use it and finally, ensure the `this.errorHandler` flag is reset to false in preparation for the next error.
-
-## New Methods<a id="sec-4-2"></a>
-
--   Added the method uploadDir(). This method will upload a directory (including any subdirectories) to the remote server. Only directories and regular files are uploaded (no symbolic links, FIFOs, socket FDs etc). Will overwrite existing files or directories, but will not delete any remote files or directories.
--   Added the method downloadDir(). This method will download a directory (including any subdirectories) to the local file system. Only directories and regular files are downloaded (no symbolic links, FIFOs, socket FDs etc).. Will overwrite existing files or directories, but will not delete any local files in the directories.
--   Added the method posixRename(). This method will use the POSIX atomic rename openSSH extension. As this is an extension to the SFTP protocol, not all servers will support this operation.
-
-## Version 5.0.1<a id="sec-4-3"></a>
-
--   The error checking was a little too stringent. The use of exist() to test for file types had a problem when the user does not have read/execute rights on the directory. Replaced with stat() method, which should avoid this issue.
-
-## Version 5.0.2<a id="sec-4-4"></a>
-
--   Fix error in local directory tests due to missing await statement.
--   Fix path handling under win32. Paths were not being parsed correctly due to the use of path.posix.parse() instead of path.parse().
-
-## Version 5.1.0<a id="sec-4-5"></a>
-
--   Add missing connection check in end() method
--   Add debugging support. Now adding a debug property to the connection configuration object will enable debugging. The value of the debug property should be a function which accepts a single string argument. Typically, this function will send the value passed in to stderr or a file.
--   Fix bug in checkRemotePath() relating to poor path specifications where you cannot determine parent directory.
-
-## Version 5.1.1<a id="sec-4-6"></a>
-
--   Bug fix for unexpected close of connections. It would seem that a connections can be unexpectedly closed without an accompanying error event. As methods only looked for error events, the method promise wold never fulfil and the method would appear to hang. Have now added close event handlers to each method that will reject the promise if the connection is closed unexpectedly.
--   Missing return statement in connect method would result in the connect method attempting to re-connect again after it had reached maximum connect retries. Added the missing return statement.
--   Added some more troubleshooting documentation. Numerous issues have been raised that turn out to be due to client code failing to return Promises inside promise chains. Common symptom is what appears to be truncated file upload/download. What is really happening is that the end method is being called before the transfer has completed.
-
-## Version 5.1.2<a id="sec-4-7"></a>
-
--   Mainly a bug fix. We needed to add back a global close listener to ensure the sftp object is unset whenever a close event occurs. As close events can occur outside main method calls, only having method based listeners was not sufficient.
--   Also added a utils.dumpListeners() method, useful when debugging issues with listener 'leakage' due to failure to remove listeners when no longer required.
-
-## Version 5.1.3<a id="sec-4-8"></a>
-
--   Fix issue with permissions for writing to root directory
--   Cleanup tests to use less connections and eliminate need for test delays
--   Bumped some dependencies to latest versions
-
-## Version 5.2.0<a id="sec-4-9"></a>
-
--   Add posixRename() method. This is an openssh extension added in openssh v4.8 and will only work on servers which support this extension.conflict
--   Bumped through2 dependency version to 4.0.2
-
-## Version 5.2.1<a id="sec-4-10"></a>
-
--   Move some dev dependencies from dependencies to devDependencies.
+-   Added new optional argument *notFoundOK* to `delete()` method. If true, no error is thrown when trying to delete a file which does not exist. Default is false.
+-   Added new filter argument to `uploadDir()` and `downloadDir()` methods. The filter argument is a regular expression used to match the files and directories to be included in the upload or download. Defaults to match all files and directories.
+-   New event handling approach. Have standardised the adding and removing of event handlers as well as added event handlers for *close* and *end* events. Some sftp servers appear to abruptly terminate connections without issuing an *error* event. This could result in failing to resolve the promise associated with the action being performed. Adding *close* and *end* listeners to reject a promise should prevent the scripts from hanging when the remote server does not return either a status or an error.
+-   Replace the `retry` library module with the `promise-retry` library module. This module also uses the `retry` library, but at a higher level abstracted for use with Promises. As a result, the number of failed retries is no longer returned as part of the error message when all attempted connection retries fail.
+-   Reduced argument verification code. Version 5.x added a lot of additional argument verification code in an attempt to provide more meaningful error messages. While this goal was achieved, it did have a significant performance impact, especially with respect to small file transfers. This additional argument verification has now been removed in favour of faster code. The downside is that some error messages have changed and in some cases, will not be as meaningful or will be more generic in nature. This seems as a reasonable compromise. It may result in increased difficulty tracking down why a script is failing, but once a script is working, it should be more efficient. If your code relies on the text in error messages, you will need to verify whether the text is still the same in any testing and adjust where necessary.
 
 # Documentation<a id="sec-5"></a>
 
@@ -229,6 +128,8 @@ The connection options are the same as those offered by the underlying SSH2 modu
 All the methods will return a Promise, except for `on()` and `removeListener()`, which are typically only used in special use cases.
 
 ## Specifying Paths<a id="sec-5-1"></a>
+
+The convention with both FTP and SFTP is that paths are specified using a 'nix' style i.e. use `/` as the path separator. This means that even if your SFTP server is running on a win32 platform, you should use `/` instead of `\` as the path separator. For example, for a win32 path of `C:\Users\fred` you would actually use `/C:/Users/fred`. If your win32 server does not support the 'nix' path convention, you can try setting the `remotePathSep` property of the `SftpClient` object to the path separator of your remote server. This **might** work, but has not been tested. Please let me know if you need to do this and provide details of the SFTP server so that I can try to create an appropriate environment and adjust things as necessary. At this point, I'm not aware of any win32 based SFTP servers which do not support the 'nix' path convention.
 
 All remote paths must either be absolute e.g. `/absolute/path/to/file` or they can be relative with a prefix of either `./` (relative to current remote directory) or `../` (relative to parent of current remote directory) e.g. `./relative/path/to/file` or `../relative/to/parent/file`. It is also possible to do things like `../../../file` to specify the parent of the parent of the parent of the current remote directory. The shell tilde (`~`) and common environment variables like `$HOME` are NOT supported.
 
@@ -316,7 +217,7 @@ Connect to an sftp server. Full documentation for connection options is availabl
       password: 'borsch', // string Password for password-based user authentication
       agent: process.env.SSH_AGENT, // string - Path to ssh-agent's UNIX socket
       privateKey: fs.readFileSync('/path/to/key'), // Buffer or string that contains
-      passphrase; 'a pass phrase', // string - For an encrypted private key
+      passphrase: 'a pass phrase', // string - For an encrypted private key
       readyTimeout: 20000, // integer How long (in ms) to wait for the SSH handshake
       strictVendor: true // boolean - Performs a strict server vendor check
       debug: myDebug // function - Set this to a function that receives a single
@@ -752,6 +653,8 @@ Remove a directory. If removing a directory and recursive flag is set to `true`,
 -   **path:** string. Path to remote directory
 -   **recursive:** boolean. If true, remove all files and directories in target directory. Defaults to false
 
+**Note**: There has been at least one report that some SFTP servers will allow non-empty directories to be removed even without the recursive flag being set to true. While this is not standard behaviour, it is recommended that users verify the behaviour of rmdir if there are plans to rely on the recursive flag to prevent removal of non-empty directories.
+
 1.  Example Use
 
     ```javascript
@@ -770,11 +673,13 @@ Remove a directory. If removing a directory and recursive flag is set to `true`,
       });
     ```
 
-### delete(path) ==> string<a id="sec-5-2-13"></a>
+### delete(path, noErrorOK) ==> string<a id="sec-5-2-13"></a>
 
 Delete a file on the remote server.
 
 -   **path:** string. Path to remote file to be deleted.
+
+-   **noErrorOK:** boolean. If true, no error is raised when you try to delete a non-existent file. Default is false.
 
 1.  Example Use
 
@@ -855,7 +760,7 @@ Change the mode (read, write or execute permissions) of a remote file or directo
 
     ```javascript
     let path = '/path/to/remote/file.txt';
-    let ndwMode = 0o644;  // rw-r-r
+    let newMode = 0o644;  // rw-r-r
     let client = new Client();
     
     client.connect(config)
@@ -872,7 +777,9 @@ Change the mode (read, write or execute permissions) of a remote file or directo
 
 ### realPath(path) ===> string<a id="sec-5-2-17"></a>
 
-Converts a relative path to an absolute path on the remote server. This method is mainly used internally to resolve remote path names. Returns '' if the path is not valid.
+Converts a relative path to an absolute path on the remote server. This method is mainly used internally to resolve remote path names.
+
+**Warning**: Currently, there is a platform inconsistency with this method on win32 platforms. For servers running on non-win32 platforms, providing a path which does not exist on the remote server will result in an empty e.g. '', absolute path being returned. On servers running on win32 platforms, a normalised path will be returned even if the path does not exist on the remote server. It is therefore advised not to use this method to also verify a path exists. instead, use the `exist()` method.
 
 -   **path:** A file path, either relative or absolute. Can handle '.' and '..', but does not expand '~'.
 
@@ -880,14 +787,17 @@ Converts a relative path to an absolute path on the remote server. This method i
 
 Returns what the server believes is the current remote working directory.
 
-### uploadDir(srcDir, dstDir) ==> string<a id="sec-5-2-19"></a>
+### uploadDir(srcDir, dstDir, filter) ==> string<a id="sec-5-2-19"></a>
 
 Upload the directory specified by `srcDir` to the remote directory specified by `dstDir`. The `dstDir` will be created if necessary. Any sub directories within `srcDir` will also be uploaded. Any existing files in the remote path will be overwritten.
 
 The upload process also emits 'upload' events. These events are fired for each successfully uploaded file. The `upload` event calls listeners with 1 argument, an object which has properties source and destination. The source property is the path of the file uploaded and the destination property is the path to where the file was uploaded to. The purpose of this event is to provide some way for client code to get feedback on the upload progress. You can add your own lisener using the `on()` method.
 
+The optionsl *filter* argument is a regular expression which can be used to select which files and directories to include in the upload.
+
 -   **srcDir:** A local file path specified as a string
 -   **dstDir:** A remote file path specified as a string
+-   **filter:** A regular expression used to filter which files and directories to include in the upload
 
 1.  Example
 
@@ -937,14 +847,17 @@ The upload process also emits 'upload' events. These events are fired for each s
     
     ```
 
-### downloadDir(srcDir, dstDir) ==> string<a id="sec-5-2-20"></a>
+### downloadDir(srcDir, dstDir, filter) ==> string<a id="sec-5-2-20"></a>
 
 Download the remote directory specified by `srcDir` to the local file system directory specified by `dstDir`. The `dstDir` directory will be created if required. All sub directories within `srcDir` will also be copied. Any existing files in the local path will be overwritten. No files in the local path will be deleted.
 
 The method also emites `download` events to provide a way to monitor download progress. The download event listener is called with one argument, an object with two properties, source and destination. The source property is the path to the remote file that has been downloaded and the destination is the local path to where the file was downloaded to. You can add a listener for this event using the `on()` method.
 
+The optional *filter* argument is a regular expression which can be used to select which files and directories will be downloaded from the remote server.
+
 -   **srcDir:** A remote file path specified as a string
 -   **dstDir:** A local file path specified as a string
+-   **filter:** A regular expression used to match the files and directories to be downloaded
 
 1.  Example
 
@@ -1031,9 +944,43 @@ Although normally not required, you can add and remove custom listeners on the s
 
     Removes the specified listener from the event specified in eventType. Note that the `end()` method automatically removes all listeners from the client object.
 
-# FAQ<a id="sec-6"></a>
+# Platform Quirks & Warnings<a id="sec-6"></a>
 
-## Remote server drops connections with only an end event<a id="sec-6-1"></a>
+## Server Capabilities<a id="sec-6-1"></a>
+
+All SFTP servers and platforms are not equal. Some facilities provided by `ssh2-sftp-client` either depend on capabilities of the remote server or the underlying capabilities of the remote server platform. As an example, consider `chmod()`. This command depends on a remote filesystem which implements the 'nix' concept of users and groups. The *win32* platform does not have the same concept of users and groups, so `chmod()` will not behave in the same way.
+
+One way to determine whether an issue you are encountering is due to `ssh2-sftp-client` or due to the remote server or server platform is to use a simple CLI sftp program, such as openSSH's sftp command. If you observe the same behaviour using plain `sftp` on the command line, the issue is likely due to server or remote platform limitations. Note that you should not use a GUI sftp client, like `Filezilla` or `winSCP` as such GUI programs often attempt to hide these server and platform incompatibilities and will take additional steps to simulate missing functionality etc. You want to use a CLI program which does as little as possible.
+
+One way to determine whether an issue you are encountering is due to `ssh2-sftp-client` or due to the remote server or server platform is to use a simple CLI sftp program, such as openSSH's sftp command. If you observe the same behaviour using plain `sftp` on the command line, the issue is likely due to server or remote platform limitations. Note that you should not use a GUI sftp client, like `Filezilla` or `winSCP` as such GUI programs often attempt to hide these server and platform incompatibilities and will take additional steps to simulate missing functionality etc.
+
+## Promises & Events<a id="sec-6-2"></a>
+
+The reality of the current Node environment is that Promises and Events don't play nicely together. Part of the problem is that events are asynchronous in nature and can occur at any time. It is very difficult to ensure an event is captured inside a Promise and handled appropriately. More information can be found in the Node documentation for Events.
+
+Node v12 has introduced some experimental features to make working with Events and Promises a little easier. At this stage, we are not using these features because they are experimental and because it would mean you cannot use this module with Node v10. Use of these features will likely be examined more closely once they become stable and non-experimental.
+
+So, what does this mean for this module? The `ssh2-sftp-client` module works hard to ensure things work as expected. In most cases, events are handled appropriately. However, there are some edge cases where events may not be handled and you may see an uncaught error exception. The most common place to see this is when you keep an SFTP connection open, but don't use it for some time. When the connection is open, but no methods are active (running), there are no error handlers defined. Should an error event be emitted (for exmaple, because the network connection has been lost), there is no handler and you will get an uncaught error exception.
+
+One way to handle this is to add your own error handler using the on() method. Note however, you need to be careful how many times your error handler is added. If you begin to see a warning about a possible memory leak, it is an indication your error handler is being added multiple times (Node will generate this warning if it finds more than 11 listeners attached to an event emitter).
+
+The other issue that can occur is that in some rare cases, the error message you get will be potentially misleading. For example, SFTP servers running on Windows appear to emit an *ECONNRESET* error in addition to the main error (for example, for failed authentication). This can result in an error which looks like a connection was reset by the remote host when in fact the real error was due to bad authentication (bad password or bad username). This situation can be made even worse by some platforms which deliberately hide the real error for security reasons e.g. does not report an error indicating a bad username because that information can be used to try and identify legitimate usernames. While this module attempts to provide meaningful error messages which can assist developers track down problems, it is a good idea to consider these errors with a grain of salt and verify the error when possible.
+
+## Windows Based Servers<a id="sec-6-3"></a>
+
+It appears that when the sftp server is running on Windows, a *ECONNRESET* error signal is raised when the end() method is called. Unfortunately, this signal is raised after a considerable delay. This means we cannot remove the error handler used in the end() promise as otherwise you will get an uncaught exception error. Leaving the handler in place, even though we will ignore this error, solves that issue, but unfortunately introduces a new problem. Because we are not removing the listener, if you re-use the client object for subsequent connections, an additional error handler will be added. If this happens more than 11 times, you will eventually see the Node warning about a possible memory leak. This is because node monitors the number of error handlers and if it sees more than 11 added to an object, it assumes there is a problem and generates the warning.
+
+The best way to avoid this issue is to not re-use client objects. Always generate a new sftp client object for each new connection.
+
+## Don't Re-use SftpClient Objects<a id="sec-6-4"></a>
+
+Due to an issue with *ECONNRESET* error signals when connecting to Windows based SFTP servers, it is not possible to remove the error handler in the end() method. This means that if you re-use the SftpClient object for multiple connections e.g. calling connect(), then end(), then connect() etc, you run the risk of multiple error handlers being added to the SftpClient object. After 11 handlers have been added, Node will generate a possible memory leak warning.
+
+To avoid this problem, don't re-use SftpClient objects. Generate a new SftpClient object for each connection. You can perform multiple actions with a single connection e.g. upload multiple files, download multiple files etc, but after you have called end(), you should not try to re-use the object with a further connect() call. Create a new object instead.
+
+# FAQ<a id="sec-7"></a>
+
+## Remote server drops connections with only an end event<a id="sec-7-1"></a>
 
 Many SFTP servers have rate limiting protection which will drop connections once a limit has been reached. In particular, openSSH has the setting `MaxStartups`, which can be a tuple of the form `max:drop:full` where `max` is the maximum allowed unauthenticated connections, `drop` is a percentage value which specifies percentage of connections to be dropped once `max` connections has been reached and `full` is the number of connections at which point all subsequent connections will be dropped. e.g. `10:30:60` means allow up to 10 unauthenticated connections after which drop 30% of connection attempts until reaching 60 unauthenticated connections, at which time, drop all attempts.
 
@@ -1041,7 +988,7 @@ Clients first make an unauthenticated connection to the SFTP server to begin neg
 
 One way to avoid this type of issue is to add a delay between connection attempts. It does not need to be a very long delay - just sufficient to permit the previous connection to be authenticated. In fact, the default setting for openSSH is `10:30:60`, so you really just need to have enough delay to ensure that the 1st connection has completed authentication before the 11th connection is attempted.
 
-## How can you pass writable stream as dst for get method?<a id="sec-6-2"></a>
+## How can I pass writable stream as dst for get method?<a id="sec-7-2"></a>
 
 If the dst argument passed to the get method is a writeable stream, the remote file will be piped into that writeable. If the writeable you pass in is a writeable stream created with `fs.createWriteStream()`, the data will be written to the file specified in the constructor call to `createWriteStream()`.
 
@@ -1097,7 +1044,7 @@ sftp
   });
 ```
 
-## How can I upload files without having to specify a password?<a id="sec-6-3"></a>
+## How can I upload files without having to specify a password?<a id="sec-7-3"></a>
 
 There are a couple of ways to do this. Essentially, you want to setup SSH keys and use these for authentication to the remote server.
 
@@ -1129,7 +1076,7 @@ sftp.connect({
 }
 ```
 
-## How can I connect through a Socks Proxy<a id="sec-6-4"></a>
+## How can I connect through a Socks Proxy<a id="sec-7-4"></a>
 
 This solution was provided by @jmorino.
 
@@ -1162,218 +1109,50 @@ client.connect({
 // client is connected
 ```
 
-## Timeout while waiting for handshake or handshake errors<a id="sec-6-5"></a>
+## Timeout while waiting for handshake or handshake errors<a id="sec-7-5"></a>
 
 Some users have encountered the error 'Timeout while waiting for handshake' or 'Handshake failed, no matching client->server ciphers. This is often due to the client not having the correct configuration for the transport layer algorithms used by ssh2. One of the connect options provided by the ssh2 module is `algorithm`, which is an object that allows you to explicitly set the key exchange, ciphers, hmac and compression algorithms as well as server host key used to establish the initial secure connection. See the SSH2 documentation for details. Getting these parameters correct usually resolves the issue.
 
-# Examples<a id="sec-7"></a>
+## How can I limit upload/download speed<a id="sec-7-6"></a>
+
+If you want to limit the amount of bandwidth used during upload/download of data, you can use a stream to limit throughput. The following example was provided by *kennylbj*. Note that there is a caveat that we must set the `autoClose` flag to false to avoid calling an extra `_read()` on a closed stream that may cause \_get Permission Denied error in ssh2-streams.
+
+```javascript
+
+
+const Throttle = require('throttle');
+const progress = require('progress-stream');
+
+// limit download speed
+const throttleStream = new Throttle(config.throttle);
+
+// download progress stream
+const progressStream = progress({
+  length: fileSize,
+  time: 500,
+});
+progressStream.on('progress', (progress) => {
+  console.log(progress.percentage.toFixed(2));
+});
+
+const outStream = createWriteStream(localPath);
+
+// pipe streams together
+throttleStream.pipe(progressStream).pipe(outStream);
+
+try {
+  // set autoClose to false
+  await client.get(remotePath, throttleStream, { autoClose: false });
+} catch (e) {
+  console.log('sftp error', e);
+} finally {
+  await client.end();
+}
+```
+
+# Examples<a id="sec-8"></a>
 
 I have started collecting example scripts in the example directory of the repository. These are mainly scripts I have put together in order to investigate issues or provide samples for users. They are not robust, lack adequate error handling and may contain errors. However, I think they are still useful for helping developers see how the module and API can be used.
-
-# Change Log<a id="sec-8"></a>
-
-## v5.2.1 (Prod Version)<a id="sec-8-1"></a>
-
--   Move some dependencies into dev-Dependencies
-
-## v5.2.0<a id="sec-8-2"></a>
-
--   Add new method posixRename() which uses the openSSH POSIX rename extension.
-
-## v5.1.3<a id="sec-8-3"></a>
-
--   Fix bug when writing to root directory and failure due to not being able to determine parent
--   Refactor some tests to eliminate need to have artificial delays between tests
--   Bumped some dependency versions to latest version
-
-## v5.1.2<a id="sec-8-4"></a>
-
--   Added back global close handler
--   Added dumpListeners() method
-
-## v5.1.1<a id="sec-8-5"></a>
-
--   Added separate close handlers to each method.
--   Added missing return statement in connect method
--   Added additional troubleshooting documentation for common errors.
-
-## v5.1.0<a id="sec-8-6"></a>
-
--   Fix bug in checkRemotePath() relating to handling of badly specified paths (issue #213)
--   Added additional debugging support
--   Add missing test for valid connection in end() method.
--   Bump ssh2 version to v0.8.8
-
-## v5.0.2<a id="sec-8-7"></a>
-
--   Fix bugs related to win32 platform and local tests for valid directories
--   Fix problem with parsing of file paths
-
-## v5.0.1<a id="sec-8-8"></a>
-
--   Turn down error checking to be less stringent and handle situations where user does not have read permission on parent directory.
-
-## v5.0.0<a id="sec-8-9"></a>
-
--   Added two new methods `uploadDir()` and `downloadDir()`
--   Removed deprecated `auxList()` method
--   Improved error message consistency
--   Added additional error checking to enable more accurate and useful error messages.
--   Added default error handler to deal with event errors which fire outside of active SftpClient methods (i.e. connection unexpectedly reset by remote host).
--   Modified event handlers to ensure that only event handlers added by the module are removed by the module (users now responsible for removing any custom event handlers they add).
--   Module error handlers added using `prependListener` to ensure they are called before any additional custom handlers added by client code.
--   Any error events fired during an `end()` call are now ignored.
-
-## v4.3.1<a id="sec-8-10"></a>
-
--   Updated end() method to resolve once close event fires
--   Added errorListener to error event in each promise to catch error events and reject the promise. This should resolve the issue of some error events causing uncaughtException erros and causing the process to exit.
-
-## v4.3.0<a id="sec-8-11"></a>
-
--   Ensure errors include an err.code property and pass through the error code from the originating error
--   Change tests for error type to use `error.code` instead of matching on `error.message`.
-
-## v4.2.4<a id="sec-8-12"></a>
-
--   Bumped ssh2 to v0.8.6
--   Added exists() usage example to examples directory
--   Clarify documentation on get() method
-
-## v4.2.3<a id="sec-8-13"></a>
-
--   Fix bug in `exist()` where tests on root directory returned false
--   Minor documentation fixes
--   Clean up mkdir example
-
-## v4.2.2<a id="sec-8-14"></a>
-
--   Minor documentation fixes
--   Added additional examples in the `example` directory
-
-## v4.2.1<a id="sec-8-15"></a>
-
--   Remove default close listener. changes in ssh2 API removed the utility of a default close listener
--   Fix path handling. Under mixed environments (where client platform and server platform were different i.e. one windows the other unix), path handling was broken due tot he use of path.join().
--   Ensure error messages include path details. Instead of errors such as "No such file" now report "No such file /path/to/missing/file" to help with debugging
-
-## v4.2.0<a id="sec-8-16"></a>
-
--   Work-around for SSH2 `end` event bug
--   Added ability to set client name in constructor method
--   Added additional error checking to prevent `connect()` being called on already connected client
--   Added additional examples in `example` directory
-
-## v4.1.0<a id="sec-8-17"></a>
-
--   move `end()` call to resolve into close hook
--   Prevent `put()` and `get()` from creating empty files in destination when unable to read source
--   Expand tests for operations when lacking required permissions
--   Add additional data checks for `append()`
-    -   Verify file exists
-    -   Verify file is writeable
-    -   Verify file is a regular file
--   Fix handling of relative paths
--   Add `realPath()` method
--   Add `cwd()` method
-
-## v4.0.4<a id="sec-8-18"></a>
-
--   Minor documentation fix
--   Fix return value from `get()`
-
-## v4.0.3<a id="sec-8-19"></a>
-
--   Fix bug in mkdir() relating to handling of relative paths
--   Modify exists() to always return 'd' if path is '.'
-
-## v4.0.2<a id="sec-8-20"></a>
-
--   Fix some minor packaging issues
-
-## v4.0.0<a id="sec-8-21"></a>
-
--   Remove support for node < 8.x
--   Fix connection retry feature
--   sftp connection object set to null when 'end' signal is raised
--   Removed 'connectMethod' argument from connect method.
--   Refined adding/removing of listeners in connect() and end() methods to enable errors to be adequately caught and reported.
--   Deprecate auxList() and add pattern/regexp filter option to list()
--   Refactored handling of event signals to provide better feedback to clients
--   Removed pointless 'permissions' property from objects returned by `stat()` (same as mode property). Added additional properties describing the type of object.
--   Added the `removeListener()` method to compliment the existing `on()` method.
-
-## Older Versions<a id="sec-8-22"></a>
-
-### v2.5.2<a id="sec-8-22-1"></a>
-
--   Repository transferred to theophilusx
--   Fix error in package.json pointing to wrong repository
-
-### v2.5.1<a id="sec-8-22-2"></a>
-
--   Apply 4 pull requests to address minor issues prior to transfer
-
-### v2.5.0<a id="sec-8-22-3"></a>
-
--   ???
-
-### v2.4.3<a id="sec-8-22-4"></a>
-
--   merge #108, #110
-    -   fix connect promise if connection ends
-
-### v2.4.2<a id="sec-8-22-5"></a>
-
--   merge #105
-    -   fix windows path
-
-### v2.4.1<a id="sec-8-22-6"></a>
-
--   merge pr #99, #100
-    -   bug fix
-
-### v2.4.0<a id="sec-8-22-7"></a>
-
--   Requires node.js v7.5.0 or above.
--   merge pr #97, thanks for @theophilusx
-    -   Remove emitter.maxListener warnings
-    -   Upgraded ssh2 dependency from 0.5.5 to 0.6.1
-    -   Enhanced error messages to provide more context and to be more consistent
-    -   re-factored test
-    -   Added new 'exists' method and re-factored mkdir/rmdir
-
-### v2.3.0<a id="sec-8-22-8"></a>
-
--   add: `stat` method
--   add `fastGet` and `fastPut` method.
--   fix: `mkdir` file exists decision logic
-
-### v3.0.0 &#x2013; deprecate this version<a id="sec-8-22-9"></a>
-
--   change: `sftp.get` will return chunk not stream anymore
--   fix: get readable not emitting data events in node 10.0.0
-
-### v2.1.1<a id="sec-8-22-10"></a>
-
--   add: event listener. [doc](https://github.com/jyu213/ssh2-sftp-client#Event)
--   add: `get` or `put` method add extra options [pr#52](https://github.com/jyu213/ssh2-sftp-client/pull/52)
-
-### v2.0.1<a id="sec-8-22-11"></a>
-
--   add: `chmod` method [pr#33](https://github.com/jyu213/ssh2-sftp-client/pull/33)
--   update: upgrade ssh2 to V0.5.0 [pr#30](https://github.com/jyu213/ssh2-sftp-client/pull/30)
--   fix: get method stream error reject unwork [#22](https://github.com/jyu213/ssh2-sftp-client/issues/22)
--   fix: return Error object on promise rejection [pr#20](https://github.com/jyu213/ssh2-sftp-client/pull/20)
-
-### v1.1.0<a id="sec-8-22-12"></a>
-
--   fix: add encoding control support for binary stream
-
-### v1.0.5:<a id="sec-8-22-13"></a>
-
--   fix: multi image upload
--   change: remove `this.client.sftp` to `connect` function
 
 # Troubleshooting<a id="sec-9"></a>
 
@@ -1385,7 +1164,7 @@ If you run into an issue which is not repeatable with just the `ssh2` and `ssh2-
 
 Note also that in the repository there are two useful directories. The first is the examples directory, which contain some examples of using `ssh2-sftp-client` to perform common tasks. A few minutes reviewing these examples can provide that additional bit of detail to help fix any problems you are encountering.
 
-The second directory is the tools directory. I have some very basic simple scripts in this directory which perform basic tasks using only the `ssh2` and `ssh2-streams` modules (no ssh2-sftp-client module). These can be useful when trying to determine if the issue is with the underlying `ssh2` and `ssh2-streams` modules.
+The second directory is the validation directory. I have some very simple scripts in this directory which perform basic tasks using only the `ssh2` modules (no `ssh2-sftp-client` module). These can be useful when trying to determine if the issue is with the underlying `ssh2` module or the `ssh2-sftp-client` wrapper module.
 
 ## Common Errors<a id="sec-9-1"></a>
 
@@ -1393,7 +1172,7 @@ There are some common errors people tend to make when using Promises or Asyc/Awa
 
 ### Not returning the promise in a `then()` block<a id="sec-9-1-1"></a>
 
-All methods in `ssh2-sftp-client` return a Promise. This means methods are executed *asynchrnously*. When you call a method inside the `then()` block of a promise chain, it is critical that you return the Promise that call generates. Failing to do this will result in the `then()` block completing and your code starting execution of the next `then()`, `catch()` or `finally()` block before your promise has been fulfilled. For exmaple, the following will not do what you expect
+All methods in `ssh2-sftp-client` return a Promise. This means methods are executed *asynchrnously*. When you call a method inside the `then()` block of a promise chain, it is critical that you return the Promise that call generates. Failing to do this will result in the `then()` block completing and your code starting execution of the next `then()`, `catch()` or `finally()` block before your promise has been fulfilled. For example, the following will not do what you expect
 
 ```javascript
 sftp.connect(config)
@@ -1407,7 +1186,7 @@ sftp.connect(config)
   });
 ```
 
-In the above code, the `sftp.end()` method will almost certainly be called before `sftp.gastGet()` has been fulfilled (unless the *foo.txt* file is really small!). In fact, the whole promise chain will complete and exit even before the `sftp.end()` call has been fulfilled. The correct code would be something like
+In the above code, the `sftp.end()` method will almost certainly be called before `sftp.fastGet()` has been fulfilled (unless the *foo.txt* file is really small!). In fact, the whole promise chain will complete and exit even before the `sftp.end()` call has been fulfilled. The correct code would be something like
 
 ```javascript
 sftp.connect(config)
@@ -1490,6 +1269,16 @@ The basic problem is that the try/catch block will have completed execution befo
 
 Error events are essentially asynchronous code. You don't know when such events will fire. Therefore, you cannot use a try/catch block to catch such event errors. Even creating an error handler which then throws an exception won't help as the key problem is that your try/catch block has already executed. There are a number of alternative ways to deal with this situation. However, the key symptom is that you see occasional uncaught error exceptions that cause your script to exit abnormally despite having try/catch blocks in your script. What you need to do is look at your code and find where errors are raised asynchronously and use an event handler or some other mechanism to manage any errors raised.
 
+### Server Differences<a id="sec-9-1-4"></a>
+
+Not all SFTP servers are the same. Like most standards, the SFTP protocol has some level of interpretation and allows different levels of compliance. This means there can be differences in behaviour between different servers and code which works with one server will not work the same with another. For example, the value returned by *realpath* for non-existent objects can differ significantly. Some servers will throw an error for a particular operation while others will just return null, some servers support concurrent operations (such as used by fastGet/fastPut) while others will not and of course, the text of error messages can vary significantly. In particular, we have noticed significant differences across different platforms. It is therefore advisable to do comprehensive testing when the SFTP server is moved to a new platform. This includes moving from to a cloud based service even if the underlying platform remains the same. I have noticed that some cloud platforms can generate unexpected events, possibly related to additional functionality or features associated with the cloud implementation. For example, it appears SFTP servers running under Azure will generate an error event when the connection is closed even when the client has requested the connection be terminated. The same SFTP server running natively on Windows does not appear to exhibit such behaviour.
+
+### Avoid Concurrent Operations<a id="sec-9-1-5"></a>
+
+Technically, SFTP should be able to perform multiple operations concurrently. As node is single threaded, what we a really talking about is running multiple execution contexts as a pool where node will switch contexts when each context is blocked due to things like waiting on network data etc. However, I have found this to be extremely unreliable and of very little benefit from a performance perspective. My recommendation is to therefore avoid executing multiple requests over the same connection in parallel (for example, generating multiple `get()` promises and using something like `Promise.all()` to resolve them.
+
+If you are going to try and perform concurrent operations, you need to test extensively and ensure you are using data which is large enough that context switching does occur (i.e. the request is not completed in a single run). Some SFTP servers will handle concurrent operations better than others.
+
 ## Debugging Support<a id="sec-9-2"></a>
 
 You can add a `debug` property to the config object passed in to `connect()` to turn on debugging. This will generate quite a lot of output. The value of the property should be a function which accepts a single string argument. For example;
@@ -1508,6 +1297,18 @@ node script.js 2> debug.log
 
 ```
 
+If you just want to see debug messages from `ssh2-sftp-client` and exclude debug messages from the underlying `ssh2` and `ssh2-streams` modules, you can filter based on messages which start with 'CLIENT' e.g.
+
+```javascript
+{
+  debug: (msg) => {
+    if (msg.startsWith('CLIENT')) {
+      console.error(msg);
+    }
+  }
+}
+```
+
 # Logging Issues<a id="sec-10"></a>
 
 Please log an issue for all bugs, questions, feature and enhancement requests. Please ensure you include the module version, node version and platform.
@@ -1518,7 +1319,7 @@ I am happy to try and help diagnose and fix any issues you encounter while using
 -   Version of ssh2-sftp-client you are using
 -   Platform your client is running on (Linux, macOS, Windows)
 -   Platform and software for the remote SFTP server when possible
--   Example of your code. By far, the most common issue is incorrect use of the module API. Example code can usually result in such issues being resolved very quickly.
+-   Example of your code or a minimal script which reproduces the issue you are encountering. By far, the most common issue is incorrect use of the module API. Example code can usually result in such issues being resolved very quickly.
 
 Perhaps the best assistance is a minimal reproducible example of the issue. Once the issue can be readily reproduced, it can usually be fixed very quickly.
 
@@ -1544,3 +1345,6 @@ Thanks to the following for their contributions -
 -   **waldyrious:** Documentation fixes
 -   **james-pellow:** Cleanup and fix for connect method logic
 -   **jhorbulyk:** Contributed posixRename() functionality
+-   **teenangst:** Contributed fix for error code 4 in stat() method
+-   **kennylbj:** Contributed example of using a throttle stream to limit upload/download bandwidth.
+-   **anton-erofeev:** Documentation fix
