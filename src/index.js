@@ -113,7 +113,7 @@ class SftpClient {
     return new Promise((resolve, reject) => {
       addTempListeners(this, 'sftpConnect', reject);
       connectReady = () => {
-        this.client.sftp((err, sftp) => {
+        config.useSFTP ? this.client.sftp((err, sftp) => {
           if (err) {
             this.debugMsg(`SFTP channel error: ${err.message} ${err.code}`);
             reject(fmtError(err, 'sftpConnect', err.code));
@@ -121,7 +121,7 @@ class SftpClient {
             this.debugMsg('SFTP channel established');
             resolve(sftp);
           }
-        });
+        }) : resolve();
       };
       // addTempListeners(this, 'sftpConnect', reject);
       this.client.on('ready', connectReady).connect(config);
