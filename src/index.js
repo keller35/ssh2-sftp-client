@@ -580,13 +580,9 @@ class SftpClient {
   // auto create parent path if not exist
   async autoPut(localSrc, remotePath, options) {
     // check if parent exist
-    let pathInfo = await utils.checkRemotePath(
-      this,
-      remotePath,
-      targetType.writeFile
-    );
-    if (pathInfo.code === errorCode.badPath) {
-      const parent = /.*\//.exec(remotePath);
+    const parent = /.*\//.exec(remotePath);
+    const exist = await this.exists(parent[0]);
+    if (!exist) {
       await this.mkdir(parent[0], true);
     }
     return await this.put(localSrc, remotePath, options);
